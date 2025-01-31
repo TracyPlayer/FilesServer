@@ -9,6 +9,7 @@ import Foundation
 import KSPlayer
 
 public protocol FilesServer {
+    static var drives: [FilesServer] { get set }
     static func startDiscovery(url: URL) -> Self?
     static func scheme(isHttps: Bool) -> String
     var url: URL { get }
@@ -20,13 +21,10 @@ public protocol FilesServer {
 
 public extension FilesServer {
     static func startDiscovery(isHttps: Bool, host: String, port: Int?, path: String?, username: String?, password: String?) -> Self? {
-        let baseURL = scheme(isHttps: isHttps) + "://" + host
-        // 处理端口
-        guard var urlComponents = URLComponents(string: baseURL) else {
-            return nil
-        }
+        var urlComponents = URLComponents()
+        urlComponents.scheme = scheme(isHttps: isHttps)
+        urlComponents.host = host
         urlComponents.port = port
-
         // 处理路径
         if let path, !path.isEmpty {
             let trimmedPath = path.hasPrefix("/") ? path : "/\(path)"
@@ -44,5 +42,60 @@ public extension FilesServer {
             return nil
         }
         return startDiscovery(url: url)
+    }
+
+    @MainActor
+    static func getServer(url: URL, name: String) async throws -> FilesServer? {
+        if let drive = drives.first(where: { $0.url == url }) {
+            return drive
+        } else if let drive = startDiscovery(url: url) {
+            try await drive.connect(share: name)
+            drives.append(drive)
+            return drive
+        } else {
+            return nil
+        }
+    }
+
+    static func play(url: URL) -> AbstractAVIOContext? {
+        if let drive = drives.first(where: { url.absoluteString.hasPrefix($0.url.absoluteString) }) {
+            let path = String(url.path.dropFirst(drive.url.path.count))
+            return drive.play(path: path)
+        } else {
+            var path = url.path
+            var components = URLComponents()
+            components.scheme = url.scheme
+            components.host = url.host
+            components.port = url.port
+            components.user = url.user
+            components.password = url.password
+            guard let url = components.url, let drive = startDiscovery(url: url) else {
+                return nil
+            }
+            let semaphore = DispatchSemaphore(value: 0) // 初始信号量值为 0
+            Task { [drive] in
+                do {
+                    let shares = try await drive.listShares()
+                    var share = shares.first {
+                        // nfs的share带有/， 但是smb没有
+                        path.hasPrefix("/" + $0) || path.hasPrefix($0)
+                    }
+                    if share == nil {
+                        share = shares.first
+                    }
+                    if let share {
+                        try await drive.connect(share: share)
+                    }
+                    drives.append(drive)
+                    path.removeFirst(drive.url.path.count)
+                    semaphore.signal()
+                } catch {
+                    KSLog(error)
+                    semaphore.signal()
+                }
+            }
+            semaphore.wait()
+            return drive.play(path: path)
+        }
     }
 }
