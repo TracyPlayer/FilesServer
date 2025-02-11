@@ -13,9 +13,9 @@ open class FileObject: Hashable {
     /// A `Dictionary` contains file information,  using `URLResourceKey` keys.
     public var allValues: [URLResourceKey: Any]
     public let extinf: [String: String]?
-    public init(allValues: [URLResourceKey: Any] = [:], extinf _: [String: String]? = nil) {
+    public init(allValues: [URLResourceKey: Any] = [:], extinf: [String: String]? = nil) {
         self.allValues = allValues
-        extinf = nil
+        self.extinf = extinf
     }
 
     public convenience init(url: URL, path: String, isDirectory: Bool, modifiedDate: Date, size: Int64, authorization: String) {
