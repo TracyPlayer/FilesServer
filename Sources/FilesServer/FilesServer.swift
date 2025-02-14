@@ -75,7 +75,7 @@ public extension FilesServer {
                 return nil
             }
             let semaphore = DispatchSemaphore(value: 0) // 初始信号量值为 0
-            Task { @MainActor [drive, path, semaphore] in
+            Task { [drive, path, semaphore] in
                 do {
                     let shares = try await drive.listShares()
                     var share = shares.first { share in
