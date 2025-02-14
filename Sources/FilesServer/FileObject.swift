@@ -2,179 +2,127 @@
 //  FileObject.swift
 //  FileProvider
 //
-//  Created by Amir Abbas Mousavian.
-//  Copyright © 2016 Mousavian. Distributed under MIT license.
+//  Created by kintan
 //
 
 import Foundation
 
 /// Containts path, url and attributes of a file or resource.
-open class FileObject: Hashable {
+public final class FileObject: Hashable, Sendable {
     /// A `Dictionary` contains file information,  using `URLResourceKey` keys.
-    public var allValues: [URLResourceKey: Any]
+    public let allValues: [URLResourceKey: Sendable]
     public let extinf: [String: String]?
-    public init(allValues: [URLResourceKey: Any] = [:], extinf: [String: String]? = nil) {
+    public init(allValues: [URLResourceKey: Sendable] = [:], extinf: [String: String]? = nil) {
         self.allValues = allValues
         self.extinf = extinf
     }
 
     public convenience init(url: URL, path: String, isDirectory: Bool, modifiedDate: Date, size: Int64, authorization: String) {
-        self.init()
-        self.path = path
-        self.url = url
-        self.modifiedDate = modifiedDate
-        self.size = size
-        type = isDirectory ? .directory : .regular
-        self.authorization = authorization
+        var allValues = [URLResourceKey: Sendable]()
+        allValues[.pathKey] = path
+        allValues[.fileURLKey] = url
+        allValues[.contentModificationDateKey] = modifiedDate
+        allValues[.fileSizeKey] = size
+        allValues[.fileResourceTypeKey] = isDirectory ? URLFileResourceType.directory : .regular
+        allValues[.authorization] = authorization
+        self.init(allValues: allValues)
     }
 
     public convenience init(url: URL, name: String, path: String, isDirectory: Bool, childrensCount: Int? = nil) {
-        self.init()
-        self.url = url
-        self.name = name
-        self.path = path
-        type = isDirectory ? .directory : .regular
-        self.childrensCount = childrensCount
+        var allValues = [URLResourceKey: Sendable]()
+        allValues[.fileURLKey] = url
+        allValues[.nameKey] = name
+        allValues[.pathKey] = path
+        allValues[.childrensCount] = childrensCount
+        allValues[.fileResourceTypeKey] = isDirectory ? URLFileResourceType.directory : .regular
+        self.init(allValues: allValues)
     }
 
     public convenience init(url: URL, name: String, extinf: [String: String]) {
-        self.init(extinf: extinf)
-        self.url = url
-        path = url.relativePath
-        self.name = name
+        var allValues = [URLResourceKey: Sendable]()
+        allValues[.fileURLKey] = url
+        allValues[.nameKey] = name
+        allValues[.pathKey] = url.relativePath
+        self.init(allValues: allValues, extinf: extinf)
     }
 
     public convenience init(url: URL, name: String, type: URLFileResourceType) {
-        self.init()
-        self.url = url
-        path = url.relativePath
-        self.name = name
-        self.type = type
+        var allValues = [URLResourceKey: Sendable]()
+        allValues[.fileURLKey] = url
+        allValues[.nameKey] = name
+        allValues[.pathKey] = url.relativePath
+        allValues[.fileResourceTypeKey] = type
+        self.init(allValues: allValues)
     }
 
     /// URL to access the resource, can be a relative URL against base URL.
     /// not supported by Dropbox provider.
-    open internal(set) var url: URL? {
-        get {
-            allValues[.fileURLKey] as? URL
-        }
-        set {
-            allValues[.fileURLKey] = newValue
-        }
+    public var url: URL? {
+        allValues[.fileURLKey] as? URL
     }
 
     /// Name of the file, usually equals with the last path component
-    open internal(set) var name: String {
-        get {
-            allValues[.nameKey] as! String
-        }
-        set {
-            allValues[.nameKey] = newValue
-        }
+    public var name: String {
+        allValues[.nameKey] as! String
     }
 
     /// Relative path of file object
-    open internal(set) var path: String {
-        get {
-            allValues[.pathKey] as! String
-        }
-        set {
-            allValues[.pathKey] = newValue
-        }
+    public var path: String {
+        allValues[.pathKey] as! String
     }
 
     /// Size of file on disk, return -1 for directories.
-    open var size: Int64 {
-        get {
-            allValues[.fileSizeKey] as? Int64 ?? -1
-        }
-        set {
-            allValues[.fileSizeKey] = newValue
-        }
+    public var size: Int64 {
+        allValues[.fileSizeKey] as? Int64 ?? -1
     }
 
     /// Count of children items of a driectory.
-    open internal(set) var childrensCount: Int? {
-        get {
-            allValues[.childrensCount] as? Int
-        }
-        set {
-            allValues[.childrensCount] = newValue
-        }
+    public var childrensCount: Int? {
+        allValues[.childrensCount] as? Int
     }
 
     /// The time contents of file has been created, returns nil if not set
-    open internal(set) var creationDate: Date? {
-        get {
-            allValues[.creationDateKey] as? Date
-        }
-        set {
-            allValues[.creationDateKey] = newValue
-        }
+    public var creationDate: Date? {
+        allValues[.creationDateKey] as? Date
     }
 
     /// The time contents of file has been modified, returns nil if not set
-    open var modifiedDate: Date? {
-        get {
-            allValues[.contentModificationDateKey] as? Date
-        }
-        set {
-            allValues[.contentModificationDateKey] = newValue
-        }
+    public var modifiedDate: Date? {
+        allValues[.contentModificationDateKey] as? Date
     }
 
     /// return resource type of file, usually directory, regular or symLink
-    open internal(set) var type: URLFileResourceType {
-        get {
-            allValues[.fileResourceTypeKey] as? URLFileResourceType ?? .unknown
-        }
-        set {
-            allValues[.fileResourceTypeKey] = newValue
-        }
+    public var type: URLFileResourceType {
+        allValues[.fileResourceTypeKey] as? URLFileResourceType ?? .unknown
     }
 
     /// File is hidden either because begining with dot or filesystem flags
     /// Setting this value on a file begining with dot has no effect
-    open internal(set) var isHidden: Bool {
-        get {
-            allValues[.isHiddenKey] as? Bool ?? false
-        }
-        set {
-            allValues[.isHiddenKey] = newValue
-        }
+    public var isHidden: Bool {
+        allValues[.isHiddenKey] as? Bool ?? false
     }
 
     /// File can not be written
-    open var isReadOnly: Bool {
-        get {
-            !(allValues[.isWritableKey] as? Bool ?? true)
-        }
-        set {
-            allValues[.isWritableKey] = !newValue
-        }
+    public var isReadOnly: Bool {
+        !(allValues[.isWritableKey] as? Bool ?? true)
     }
 
-    open internal(set) var authorization: String? {
-        get {
-            allValues[.authorization] as? String
-        }
-        set {
-            allValues[.authorization] = newValue
-        }
+    public var authorization: String? {
+        allValues[.authorization] as? String
     }
 
     /// File is a Directory
-    open var isDirectory: Bool {
+    public var isDirectory: Bool {
         type == .directory
     }
 
     /// File is a normal file
-    open var isRegularFile: Bool {
+    public var isRegularFile: Bool {
         type == .regular
     }
 
     /// File is a Symbolic link
-    open var isSymLink: Bool {
+    public var isSymLink: Bool {
         type == .symbolicLink
     }
 
@@ -257,9 +205,9 @@ extension FileObject {
 }
 
 /// Sorting FileObject array by given criteria, **not thread-safe**
-public struct FileObjectSorting {
+public struct FileObjectSorting: Sendable {
     /// Determines sort kind by which item of File object
-    public enum SortType {
+    public enum SortType: Sendable {
         /// Sorting by default Finder (case-insensitive) behavior
         case name
         /// Sorting by case-sensitive form of file name

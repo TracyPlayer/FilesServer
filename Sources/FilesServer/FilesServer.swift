@@ -8,12 +8,14 @@
 import Foundation
 import KSPlayer
 
-public protocol FilesServer {
+public protocol FilesServer: Sendable {
     static var drives: [FilesServer] { get set }
     static func startDiscovery(url: URL) -> Self?
     static func scheme(isHttps: Bool) -> String
     var url: URL { get }
+    @MainActor
     func listShares() async throws -> [String]
+    @MainActor
     func connect(share: String) async throws
     func contentsOfDirectory(atPath path: String) async throws -> [FileObject]
     func play(path: String) -> AbstractAVIOContext?
@@ -62,7 +64,7 @@ public extension FilesServer {
             let path = String(url.path.dropFirst(drive.url.path.count))
             return drive.play(path: path)
         } else {
-            var path = url.path
+            let path = url.path
             var components = URLComponents()
             components.scheme = url.scheme
             components.host = url.host
@@ -73,12 +75,12 @@ public extension FilesServer {
                 return nil
             }
             let semaphore = DispatchSemaphore(value: 0) // 初始信号量值为 0
-            Task { [drive] in
+            Task { @MainActor [drive, path, semaphore] in
                 do {
                     let shares = try await drive.listShares()
-                    var share = shares.first {
+                    var share = shares.first { share in
                         // nfs的share带有/， 但是smb没有
-                        path.hasPrefix("/" + $0) || path.hasPrefix($0)
+                        path.hasPrefix("/" + share) || path.hasPrefix(share)
                     }
                     if share == nil {
                         share = shares.first
@@ -86,8 +88,6 @@ public extension FilesServer {
                     if let share {
                         try await drive.connect(share: share)
                     }
-                    drives.append(drive)
-                    path.removeFirst(drive.url.path.count)
                     semaphore.signal()
                 } catch {
                     KSLog(error)
@@ -95,7 +95,10 @@ public extension FilesServer {
                 }
             }
             semaphore.wait()
-            return drive.play(path: path)
+            drives.append(drive)
+            var newPath = path
+            newPath.removeFirst(drive.url.path.count)
+            return drive.play(path: newPath)
         }
     }
 }

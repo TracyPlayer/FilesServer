@@ -22,5 +22,9 @@ let package = Package(
         .target(name: "FilesServer", dependencies: [
             "KSPlayer",
         ]),
+    ],
+    swiftLanguageVersions: [
+        .v5,
+        .version("6"),
     ]
 )
