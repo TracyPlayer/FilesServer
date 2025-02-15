@@ -50,12 +50,18 @@ public extension FilesServer {
     static func getServer(url: URL, name: String) async throws -> FilesServer? {
         if let drive = drives.first(where: { $0.url == url }) {
             return drive
-        } else if let drive = startDiscovery(url: url) {
-            try await drive.connect(share: name)
-            drives.append(drive)
-            return drive
         } else {
-            return nil
+            var url = url
+            if url.lastPathComponent == name {
+                url.deleteLastPathComponent()
+            }
+            if let drive = startDiscovery(url: url) {
+                try await drive.connect(share: name)
+                drives.append(drive)
+                return drive
+            } else {
+                return nil
+            }
         }
     }
 
@@ -75,7 +81,7 @@ public extension FilesServer {
                 return nil
             }
             let semaphore = DispatchSemaphore(value: 0) // 初始信号量值为 0
-            Task { [drive, path, semaphore] in
+            Task {
                 do {
                     let shares = try await drive.listShares()
                     var share = shares.first { share in
