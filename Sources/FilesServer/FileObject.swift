@@ -21,6 +21,7 @@ public final class FileObject: Hashable, Sendable {
         var allValues = [URLResourceKey: Sendable]()
         allValues[.pathKey] = path
         allValues[.fileURLKey] = url
+        allValues[.nameKey] = url.lastPathComponent
         allValues[.contentModificationDateKey] = modifiedDate
         allValues[.fileSizeKey] = size
         allValues[.fileResourceTypeKey] = isDirectory ? URLFileResourceType.directory : .regular
@@ -63,12 +64,12 @@ public final class FileObject: Hashable, Sendable {
 
     /// Name of the file, usually equals with the last path component
     public var name: String {
-        allValues[.nameKey] as! String
+        allValues[.nameKey] as? String ?? ""
     }
 
     /// Relative path of file object
     public var path: String {
-        allValues[.pathKey] as! String
+        allValues[.pathKey] as? String ?? ""
     }
 
     /// Size of file on disk, return -1 for directories.
