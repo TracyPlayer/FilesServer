@@ -18,6 +18,8 @@ public protocol FilesServer: Sendable {
     @MainActor
     func connect(share: String) async throws
     func contentsOfDirectory(atPath path: String) async throws -> [FileObject]
+    func removeItem(atPath path: String) async throws
+    func createDirectory(atPath path: String) async throws
     func play(path: String) -> AbstractAVIOContext?
 }
 
