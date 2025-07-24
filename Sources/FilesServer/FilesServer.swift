@@ -30,7 +30,7 @@ public extension FilesServer {
         try await url.appendingPathComponent(path).data()
     }
 
-    static func startDiscovery(isHttps: Bool, host: String, port: Int?, path: String?, username: String?, password: String?) -> Self? {
+    static func url(isHttps: Bool, host: String, port: Int?, path: String?, username: String?, password: String?) -> URL? {
         var urlComponents = URLComponents()
         urlComponents.scheme = scheme(isHttps: isHttps)
         urlComponents.host = host
@@ -48,7 +48,11 @@ public extension FilesServer {
         if password?.isEmpty == false {
             urlComponents.password = password
         }
-        guard let url = urlComponents.url else {
+        return urlComponents.url
+    }
+
+    static func startDiscovery(isHttps: Bool, host: String, port: Int?, path: String?, username: String?, password: String?) -> Self? {
+        guard let url = url(isHttps: isHttps, host: host, port: port, path: path, username: username, password: password) else {
             return nil
         }
         return startDiscovery(url: url)
