@@ -92,7 +92,11 @@ public extension FilesServer {
                     path.hasPrefix("/" + share) || path.hasPrefix(share)
                 }
                 if share == nil {
-                    share = shares.first
+                    if let first = shares.first {
+                        share = shares.first
+                    } else {
+                        share = path.split(separator: "/").first.map { String($0) }
+                    }
                 }
                 try await drive.connect(share: share ?? "")
                 drives.append(drive)
