@@ -146,6 +146,24 @@ public final class FileObject: Hashable, Sendable {
         }
         return lhs.path == rhs.path && lhs.size == rhs.size && lhs.modifiedDate == rhs.modifiedDate
     }
+
+    /// Determines sort kind by which item of File object
+    public enum SortType: Sendable {
+        /// Sorting by default Finder (case-insensitive) behavior
+        case name
+        /// Sorting by case-sensitive form of file name
+        case nameCaseSensitive
+        /// Sorting by case-in sensitive form of file name
+        case nameCaseInsensitive
+        /// Sorting by file type
+        case `extension`
+        /// Sorting by file modified date
+        case modifiedDate
+        /// Sorting by file creation date
+        case creationDate
+        /// Sorting by file modified date
+        case size
+    }
 }
 
 extension FileObject {
@@ -205,64 +223,9 @@ extension FileObject {
     }
 }
 
-/// Sorting FileObject array by given criteria, **not thread-safe**
-public struct FileObjectSorting: Sendable {
-    /// Determines sort kind by which item of File object
-    public enum SortType: Sendable {
-        /// Sorting by default Finder (case-insensitive) behavior
-        case name
-        /// Sorting by case-sensitive form of file name
-        case nameCaseSensitive
-        /// Sorting by case-in sensitive form of file name
-        case nameCaseInsensitive
-        /// Sorting by file type
-        case `extension`
-        /// Sorting by file modified date
-        case modifiedDate
-        /// Sorting by file creation date
-        case creationDate
-        /// Sorting by file modified date
-        case size
-
-        /// all sort types
-        static var allItems: [SortType] {
-            [.name, .nameCaseSensitive, .nameCaseInsensitive, .extension,
-             .modifiedDate, .creationDate, .size]
-        }
-    }
-
-    public let sortType: SortType
-    /// puts A before Z, default is true
-    public let ascending: Bool
-    /// puts directories on top, regardless of other attributes, default is false
-    public let isDirectoriesFirst: Bool
-
-    public static let nameAscending = FileObjectSorting(type: .name, ascending: true)
-    public static let nameDesceding = FileObjectSorting(type: .name, ascending: false)
-    public static let sizeAscending = FileObjectSorting(type: .size, ascending: true)
-    public static let sizeDesceding = FileObjectSorting(type: .size, ascending: false)
-    public static let extensionAscending = FileObjectSorting(type: .extension, ascending: true)
-    public static let extensionDesceding = FileObjectSorting(type: .extension, ascending: false)
-    public static let modifiedAscending = FileObjectSorting(type: .modifiedDate, ascending: true)
-    public static let modifiedDesceding = FileObjectSorting(type: .modifiedDate, ascending: false)
-    public static let createdAscending = FileObjectSorting(type: .creationDate, ascending: true)
-    public static let createdDesceding = FileObjectSorting(type: .creationDate, ascending: false)
-
-    /// Initializes a `FileObjectSorting` allows to sort an `Array` of `FileObject`.
-    ///
-    /// - Parameters:
-    ///   - type: Determines to sort based on which file property.
-    ///   - ascending: `true` of resulting `Array` is ascending
-    ///   - isDirectoriesFirst: Puts directoris on the top of resulting `Array`.
-    public init(type: SortType, ascending: Bool = true, isDirectoriesFirst: Bool = false) {
-        sortType = type
-        self.ascending = ascending
-        self.isDirectoriesFirst = isDirectoriesFirst
-    }
-
-    /// Sorts array of `FileObject`s by criterias set in attributes.
-    public func sort(_ files: [FileObject]) -> [FileObject] {
-        files.sorted {
+public extension [FileObject] {
+    mutating func sort(by type: FileObject.SortType, ascending: Bool = true, isDirectoriesFirst: Bool = true) {
+        sort {
             if isDirectoriesFirst {
                 if $0.isDirectory, !($1.isDirectory) {
                     return true
@@ -271,7 +234,7 @@ public struct FileObjectSorting: Sendable {
                     return false
                 }
             }
-            switch sortType {
+            switch type {
             case .name:
                 return ($0.name).localizedStandardCompare($1.name) == (ascending ? .orderedAscending : .orderedDescending)
             case .nameCaseSensitive:
