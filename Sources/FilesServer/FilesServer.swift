@@ -13,9 +13,7 @@ public protocol FilesServer: Sendable {
     static func startDiscovery(url: URL) -> Self?
     static func scheme(isHttps: Bool) -> String
     var url: URL { get }
-    @MainActor
     func listShares() async throws -> [String]
-    @MainActor
     func connect(share: String) async throws
     func contentsOfDirectory(atPath path: String) async throws -> [FileObject]
     func contents(atPath path: String) async throws -> Data
@@ -58,7 +56,6 @@ public extension FilesServer {
         return startDiscovery(url: url)
     }
 
-    @MainActor
     static func getServer(url: URL, name: String? = nil) async throws -> FilesServer? {
         if let drive = drives.first(where: { url.absoluteString.hasPrefix($0.url.absoluteString) }) {
             return drive
