@@ -96,6 +96,10 @@ public extension FilesServer {
                     }
                 }
                 try await drive.connect(share: share ?? "")
+                // 解决多线程并发crash的问题
+                if let share, let value = drives.first(where: { $0.url == url.appendingPathComponent(share) }) {
+                    return value
+                }
                 drives.append(drive)
                 return drive
             }
