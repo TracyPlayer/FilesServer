@@ -22,6 +22,11 @@ public protocol FilesServer: Sendable {
     func play(path: String) -> AbstractAVIOContext?
 }
 
+@globalActor
+actor BackgroundActor {
+    static let shared = BackgroundActor()
+}
+
 public extension FilesServer {
     // 默认使用URLRequest下载，ftp和http协议都可以使用URLRequest。
     func contents(atPath path: String) async throws -> Data {
@@ -56,6 +61,8 @@ public extension FilesServer {
         return startDiscovery(url: url)
     }
 
+    // 增加actor，防止并发导致crash
+    @BackgroundActor
     static func getServer(url: URL, name: String? = nil) async throws -> FilesServer? {
         if let drive = drives.first(where: { url.absoluteString.hasPrefix($0.url.absoluteString) }) {
             return drive
