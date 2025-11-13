@@ -27,15 +27,10 @@ actor BackgroundActor {
     static let shared = BackgroundActor()
 }
 
-public extension FilesServer {
-    // 默认使用URLRequest下载，ftp和http协议都可以使用URLRequest。
-    func contents(atPath path: String) async throws -> Data {
-        try await url.appendingPathComponent(path).data()
-    }
-
-    static func url(isHttps: Bool, host: String, port: Int?, path: String?, username: String?, password: String?) -> URL? {
+public extension URL {
+    static func url(scheme: String?, host: String, port: Int?, path: String?, username: String?, password: String?) -> URL? {
         var urlComponents = URLComponents()
-        urlComponents.scheme = scheme(isHttps: isHttps)
+        urlComponents.scheme = scheme
         urlComponents.host = host
         urlComponents.port = port
         // 处理路径
@@ -53,12 +48,16 @@ public extension FilesServer {
         }
         return urlComponents.url
     }
+}
 
-    static func startDiscovery(isHttps: Bool, host: String, port: Int?, path: String?, username: String?, password: String?) -> Self? {
-        guard let url = url(isHttps: isHttps, host: host, port: port, path: path, username: username, password: password) else {
-            return nil
-        }
-        return startDiscovery(url: url)
+public extension FilesServer {
+    // 默认使用URLRequest下载，ftp和http协议都可以使用URLRequest。
+    func contents(atPath path: String) async throws -> Data {
+        try await url.appendingPathComponent(path).data()
+    }
+
+    static func url(isHttps: Bool, host: String, port: Int?, path: String?, username: String?, password: String?) -> URL? {
+        URL.url(scheme: scheme(isHttps: isHttps), host: host, port: port, path: path, username: username, password: password)
     }
 
     // 增加actor，防止并发导致crash
