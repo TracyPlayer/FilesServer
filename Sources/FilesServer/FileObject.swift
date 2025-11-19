@@ -305,9 +305,12 @@ public extension URLResourceKey {
     /// **FileProvider** count of items in directory
     static let childrensCount = URLResourceKey(rawValue: "MFPURLChildrensCount")
     /// 认证
-    static let authorization = URLResourceKey(rawValue: "Authorization")
-    static let groupKey = URLResourceKey(rawValue: "groupKey")
-    static let durationKey = URLResourceKey(rawValue: "durationKey")
+    static let authorization = URLResourceKey(rawValue: "NSURLAuthorization")
+    static let groupKey = URLResourceKey(rawValue: "NSURLGroupKey")
+    static let durationKey = URLResourceKey(rawValue: "NSURLDurationKey")
+    #if !os(macos)
+    static let thumbnailKey = URLResourceKey(rawValue: "NSURLThumbnailKey")
+    #endif
 }
 
 extension CharacterSet {
