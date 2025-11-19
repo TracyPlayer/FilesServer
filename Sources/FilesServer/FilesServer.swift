@@ -51,6 +51,10 @@ public extension URL {
 }
 
 public extension FilesServer {
+    func play(path _: String) -> KSPlayer.AbstractAVIOContext? {
+        nil
+    }
+
     // 默认使用URLRequest下载，ftp和http协议都可以使用URLRequest。
     func contents(atPath path: String) async throws -> Data {
         try await url.appendingPathComponent(path).data()

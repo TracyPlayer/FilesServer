@@ -11,6 +11,9 @@ import Foundation
 public final class FileObject: Hashable, Sendable {
     /// A `Dictionary` contains file information,  using `URLResourceKey` keys.
     public let allValues: [URLResourceKey: Sendable]
+    /**
+     m3u8的ext 例如 tvg-logo="https://image.com" group-title="test"
+     */
     public let extinf: [String: String]?
     public init(allValues: [URLResourceKey: Sendable] = [:], extinf: [String: String]? = nil) {
         self.allValues = allValues
@@ -29,6 +32,16 @@ public final class FileObject: Hashable, Sendable {
         self.init(allValues: allValues)
     }
 
+    public convenience init(name: String, path: String, isDirectory: Bool, group: String? = nil, thumbnail: URL? = nil) {
+        var allValues = [URLResourceKey: Sendable]()
+        allValues[.nameKey] = name
+        allValues[.pathKey] = path
+        allValues[.fileResourceTypeKey] = isDirectory ? URLFileResourceType.directory : .regular
+        allValues[.groupKey] = group
+        allValues[.thumbnailKey] = thumbnail
+        self.init(allValues: allValues)
+    }
+
     public convenience init(url: URL, name: String, path: String, isDirectory: Bool, childrensCount: Int? = nil) {
         var allValues = [URLResourceKey: Sendable]()
         allValues[.fileURLKey] = url
@@ -36,6 +49,16 @@ public final class FileObject: Hashable, Sendable {
         allValues[.pathKey] = path
         allValues[.childrensCount] = childrensCount
         allValues[.fileResourceTypeKey] = isDirectory ? URLFileResourceType.directory : .regular
+        self.init(allValues: allValues)
+    }
+
+    public convenience init(url: URL, name: String, group: String? = nil, thumbnail: URL? = nil) {
+        var allValues = [URLResourceKey: Sendable]()
+        allValues[.fileURLKey] = url
+        allValues[.nameKey] = name
+        allValues[.pathKey] = url.relativePath
+        allValues[.groupKey] = group
+        allValues[.thumbnailKey] = thumbnail
         self.init(allValues: allValues)
     }
 
@@ -110,6 +133,14 @@ public final class FileObject: Hashable, Sendable {
 
     public var authorization: String? {
         allValues[.authorization] as? String
+    }
+
+    public var thumbnail: URL? {
+        allValues[.thumbnailKey] as? URL
+    }
+
+    public var group: String? {
+        allValues[.groupKey] as? String
     }
 
     /// File is a Directory
@@ -275,6 +306,8 @@ public extension URLResourceKey {
     static let childrensCount = URLResourceKey(rawValue: "MFPURLChildrensCount")
     /// 认证
     static let authorization = URLResourceKey(rawValue: "Authorization")
+    static let groupKey = URLResourceKey(rawValue: "groupKey")
+    static let durationKey = URLResourceKey(rawValue: "durationKey")
 }
 
 extension CharacterSet {
