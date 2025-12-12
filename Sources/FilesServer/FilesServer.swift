@@ -19,7 +19,7 @@ public protocol FilesServer: Sendable {
     func contents(atPath path: String) async throws -> Data
     func removeItem(atPath path: String) async throws
     func createDirectory(atPath path: String) async throws
-    func play(path: String) -> AbstractAVIOContext?
+    func play(for url: URL, path: String) async -> Either<URL, AbstractAVIOContext>
 }
 
 @globalActor
@@ -51,8 +51,8 @@ public extension URL {
 }
 
 public extension FilesServer {
-    func play(path _: String) -> KSPlayer.AbstractAVIOContext? {
-        nil
+    func play(for url: URL, path _: String) async -> Either<URL, AbstractAVIOContext> {
+        .left(url)
     }
 
     // 默认使用URLRequest下载，ftp和http协议都可以使用URLRequest。
@@ -116,24 +116,17 @@ public extension FilesServer {
         }
     }
 
-    static func play(url: URL) -> AbstractAVIOContext? {
-        let semaphore = DispatchSemaphore(value: 0) // 初始信号量值为 0
-        var drive: FilesServer?
-        Task {
-            do {
-                drive = try await getServer(url: url)
-                semaphore.signal()
-            } catch {
-                KSLog(error)
-                semaphore.signal()
+    static func play(url: URL) async -> Either<URL, AbstractAVIOContext> {
+        do {
+            guard let drive = try await getServer(url: url) else {
+                return .left(url)
             }
+            var newPath = url.path
+            newPath.removeFirst(drive.url.path.count)
+            return await drive.play(for: url, path: newPath)
+        } catch {
+            KSLog(error)
         }
-        semaphore.wait()
-        guard let drive else {
-            return nil
-        }
-        var newPath = url.path
-        newPath.removeFirst(drive.url.path.count)
-        return drive.play(path: newPath)
+        return .left(url)
     }
 }
