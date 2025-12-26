@@ -7,7 +7,7 @@
 
 import Foundation
 
-/// Containts path, url and attributes of a file or resource.
+/// Containts path, url and attributes of a file or resource.  参考URLResourceValues
 public final class FileObject: Hashable, Sendable {
     /// A `Dictionary` contains file information,  using `URLResourceKey` keys.
     public let allValues: [URLResourceKey: Sendable]
@@ -95,9 +95,18 @@ public final class FileObject: Hashable, Sendable {
         allValues[.pathKey] as? String ?? ""
     }
 
-    /// Size of file on disk, return -1 for directories.
+    /// Size of file on disk, return 0 for directories.
+    @available(*, deprecated, message: "Use fileSize instead")
     public var size: Int64 {
-        allValues[.fileSizeKey] as? Int64 ?? -1
+        fileSize
+    }
+
+    public var fileSize: Int64 {
+        allValues[.fileSizeKey] as? Int64 ?? 0
+    }
+
+    public var duration: Int16 {
+        allValues[.durationKey] as? Int16 ?? -1
     }
 
     /// Count of children items of a driectory.
@@ -160,7 +169,7 @@ public final class FileObject: Hashable, Sendable {
 
     public func hash(into hasher: inout Hasher) {
         hasher.combine(url)
-        hasher.combine(size)
+        hasher.combine(fileSize)
         hasher.combine(modifiedDate)
     }
 
@@ -173,9 +182,9 @@ public final class FileObject: Hashable, Sendable {
         }
 
         if let rurl = rhs.allValues[.fileURLKey] as? URL, let lurl = lhs.allValues[.fileURLKey] as? URL {
-            return rurl == lurl && lhs.size == rhs.size
+            return rurl == lurl && lhs.fileSize == rhs.fileSize
         }
-        return lhs.path == rhs.path && lhs.size == rhs.size && lhs.modifiedDate == rhs.modifiedDate
+        return lhs.path == rhs.path && lhs.fileSize == rhs.fileSize && lhs.modifiedDate == rhs.modifiedDate
     }
 
     /// Determines sort kind by which item of File object
@@ -193,7 +202,7 @@ public final class FileObject: Hashable, Sendable {
         /// Sorting by file creation date
         case creationDate
         /// Sorting by file modified date
-        case size
+        case fileSize
     }
 }
 
@@ -284,8 +293,8 @@ public extension [FileObject] {
                 let fileCreation1 = $0.creationDate ?? Date.distantPast
                 let fileCreation2 = $1.creationDate ?? Date.distantPast
                 return ascending ? fileCreation1 < fileCreation2 : fileCreation1 > fileCreation2
-            case .size:
-                return ascending ? $0.size < $1.size : $0.size > $1.size
+            case .fileSize:
+                return ascending ? $0.fileSize < $1.fileSize : $0.fileSize > $1.fileSize
             }
         }
     }
