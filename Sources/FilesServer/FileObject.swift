@@ -268,7 +268,11 @@ extension FileObject {
 
 public extension [FileObject] {
     mutating func sort(by type: FileObject.SortType, ascending: Bool = true, isDirectoriesFirst: Bool = true) {
-        sort {
+        self = sorted(by: type, ascending: ascending, isDirectoriesFirst: isDirectoriesFirst)
+    }
+
+    func sorted(by type: FileObject.SortType, ascending: Bool = true, isDirectoriesFirst: Bool = true) -> [FileObject] {
+        sorted {
             if isDirectoriesFirst {
                 if $0.isDirectory, !($1.isDirectory) {
                     return true
