@@ -15,72 +15,75 @@ public final class FileObject: Hashable, Sendable {
      m3u8的ext 例如 tvg-logo="https://image.com" group-title="test"
      */
     public let extinf: [String: String]?
-    public init(allValues: [URLResourceKey: Sendable] = [:], extinf: [String: String]? = nil) {
+
+    public init(url: URL, allValues: [URLResourceKey: Sendable], extinf: [String: String]? = nil) {
+        var allValues = allValues
+        allValues[.fileURLKey] = url
         self.allValues = allValues
         self.extinf = extinf
+    }
+
+    public convenience init(rootURL: URL, allValues: [URLResourceKey: Sendable]) {
+        let url: URL
+        if let value = allValues[.fileURLKey] as? URL {
+            url = value
+        } else {
+            if allValues[.fileResourceTypeKey] as? URLFileResourceType == .directory {
+                url = rootURL
+            } else {
+                url = rootURL.appendingPathComponent(allValues[.pathKey] as? String ?? "")
+            }
+        }
+        self.init(url: url, allValues: allValues)
     }
 
     public convenience init(url: URL, path: String, isDirectory: Bool, modifiedDate: Date, size: Int64, authorization: String) {
         var allValues = [URLResourceKey: Sendable]()
         allValues[.pathKey] = path
-        allValues[.fileURLKey] = url
         allValues[.nameKey] = url.lastPathComponent
         allValues[.contentModificationDateKey] = modifiedDate
         allValues[.fileSizeKey] = size
         allValues[.fileResourceTypeKey] = isDirectory ? URLFileResourceType.directory : .regular
         allValues[.authorization] = authorization
-        self.init(allValues: allValues)
+        self.init(url: url, allValues: allValues)
     }
 
-    public convenience init(name: String, path: String, isDirectory: Bool, group: String? = nil, thumbnail: URL? = nil) {
+    public convenience init(url: URL, name: String, path: String? = nil, isDirectory: Bool = false, group: String? = nil, thumbnail: URL? = nil) {
         var allValues = [URLResourceKey: Sendable]()
         allValues[.nameKey] = name
-        allValues[.pathKey] = path
+        allValues[.pathKey] = path ?? url.lastPathComponent
         allValues[.fileResourceTypeKey] = isDirectory ? URLFileResourceType.directory : .regular
         allValues[.groupKey] = group
         allValues[.thumbnailKey] = thumbnail
-        self.init(allValues: allValues)
+        self.init(url: url, allValues: allValues)
     }
 
     public convenience init(url: URL, name: String, path: String, isDirectory: Bool, childrensCount: Int? = nil) {
         var allValues = [URLResourceKey: Sendable]()
-        allValues[.fileURLKey] = url
         allValues[.nameKey] = name
         allValues[.pathKey] = path
         allValues[.childrensCount] = childrensCount
         allValues[.fileResourceTypeKey] = isDirectory ? URLFileResourceType.directory : .regular
-        self.init(allValues: allValues)
+        self.init(url: url, allValues: allValues)
     }
 
-    public convenience init(url: URL, name: String, group: String? = nil, thumbnail: URL? = nil) {
+    public convenience init(url: URL, name: String, extinf _: [String: String]) {
         var allValues = [URLResourceKey: Sendable]()
-        allValues[.fileURLKey] = url
         allValues[.nameKey] = name
         allValues[.pathKey] = url.relativePath
-        allValues[.groupKey] = group
-        allValues[.thumbnailKey] = thumbnail
-        self.init(allValues: allValues)
-    }
-
-    public convenience init(url: URL, name: String, extinf: [String: String]) {
-        var allValues = [URLResourceKey: Sendable]()
-        allValues[.fileURLKey] = url
-        allValues[.nameKey] = name
-        allValues[.pathKey] = url.relativePath
-        self.init(allValues: allValues, extinf: extinf)
+        self.init(url: url, allValues: allValues)
     }
 
     public convenience init(url: URL, name: String, type: URLFileResourceType) {
         var allValues = [URLResourceKey: Sendable]()
-        allValues[.fileURLKey] = url
         allValues[.nameKey] = name
         allValues[.pathKey] = url.relativePath
         allValues[.fileResourceTypeKey] = type
-        self.init(allValues: allValues)
+        self.init(url: url, allValues: allValues)
     }
 
     /// URL to access the resource, can be a relative URL against base URL.
-    /// not supported by Dropbox provider.
+    /// 现在init方法强制都有url。所以可以认为一定有url
     public var url: URL? {
         allValues[.fileURLKey] as? URL
     }
