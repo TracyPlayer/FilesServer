@@ -191,7 +191,8 @@ public final class FileObject: Hashable, Sendable {
     }
 
     /// Determines sort kind by which item of File object
-    public enum SortType: Sendable {
+    public enum SortType: Int, Sendable {
+        case none
         /// Sorting by default Finder (case-insensitive) behavior
         case name
         /// Sorting by case-sensitive form of file name
@@ -272,7 +273,10 @@ public extension [FileObject] {
     }
 
     func sorted(by type: FileObject.SortType, ascending: Bool = true, isDirectoriesFirst: Bool = true) -> [FileObject] {
-        sorted {
+        guard type != .none else {
+            return self
+        }
+        return sorted {
             if isDirectoriesFirst {
                 if $0.isDirectory, !($1.isDirectory) {
                     return true
@@ -302,6 +306,8 @@ public extension [FileObject] {
                 return ascending ? fileCreation1 < fileCreation2 : fileCreation1 > fileCreation2
             case .fileSize:
                 return ascending ? $0.fileSize < $1.fileSize : $0.fileSize > $1.fileSize
+            case .none:
+                return false
             }
         }
     }
