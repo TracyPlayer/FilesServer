@@ -55,7 +55,7 @@ public extension FilesServer {
         .left(url)
     }
 
-    // 默认使用URLRequest下载，ftp和http协议都可以使用URLRequest。
+    /// 默认使用URLRequest下载，ftp和http协议都可以使用URLRequest。
     func contents(atPath path: String) async throws -> Data {
         try await url.appendingPathComponent(path).data()
     }
@@ -64,7 +64,7 @@ public extension FilesServer {
         URL.url(scheme: scheme(isHttps: isHttps), host: host, port: port, path: path, username: username, password: password)
     }
 
-    // 增加actor，防止并发导致crash
+    /// 增加actor，防止并发导致crash
     @BackgroundActor
     static func getServer(url: URL, name: String? = nil) async throws -> FilesServer? {
         if let drive = drives.first(where: { url.absoluteString.hasPrefix($0.url.absoluteString) }) {
