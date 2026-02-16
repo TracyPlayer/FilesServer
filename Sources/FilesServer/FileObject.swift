@@ -67,11 +67,11 @@ public final class FileObject: Hashable, Sendable {
         self.init(url: url, allValues: allValues)
     }
 
-    public convenience init(url: URL, name: String, extinf _: [String: String]) {
+    public convenience init(url: URL, name: String, extinf: [String: String]) {
         var allValues = [URLResourceKey: Sendable]()
         allValues[.nameKey] = name
         allValues[.pathKey] = url.relativePath
-        self.init(url: url, allValues: allValues)
+        self.init(url: url, allValues: allValues, extinf: extinf)
     }
 
     public convenience init(url: URL, name: String, type: URLFileResourceType) {
@@ -152,7 +152,7 @@ public final class FileObject: Hashable, Sendable {
     }
 
     public var group: String? {
-        allValues[.groupKey] as? String
+        allValues[.groupKey] as? String ?? extinf?["group-title"]
     }
 
     /// File is a Directory
