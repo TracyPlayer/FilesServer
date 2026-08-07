@@ -48,6 +48,24 @@ public extension URL {
         }
         return urlComponents.url
     }
+
+    var withoutUserPassword: URL {
+        guard var components = URLComponents(url: self, resolvingAgainstBaseURL: false) else {
+            return self
+        }
+        components.user = nil
+        components.password = nil
+        return components.url ?? self
+    }
+
+    func add(username: String, password: String) -> URL {
+        guard var components = URLComponents(url: self, resolvingAgainstBaseURL: false) else {
+            return self
+        }
+        components.user = username
+        components.password = password
+        return components.url ?? self
+    }
 }
 
 public extension FilesServer {
