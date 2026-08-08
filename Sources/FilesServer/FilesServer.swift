@@ -27,6 +27,19 @@ actor BackgroundActor {
     static let shared = BackgroundActor()
 }
 
+public enum HTTPMethod: String {
+    case get = "GET"
+    case post = "POST"
+    case put = "PUT"
+    case delete = "DELETE"
+    case head = "HEAD"
+    case options = "OPTIONS"
+    case propfind = "PROPFIND"
+    case mkcol = "MKCOL"
+    case move = "MOVE"
+    case copy = "COPY"
+}
+
 public extension URL {
     static func url(scheme: String?, host: String, port: Int?, path: String?, username: String?, password: String?) -> URL? {
         var urlComponents = URLComponents()
