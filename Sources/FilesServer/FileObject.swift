@@ -335,10 +335,6 @@ public extension URLResourceKey {
     #endif
 }
 
-extension CharacterSet {
-    static let filePathAllowed = CharacterSet.urlPathAllowed.subtracting(CharacterSet(charactersIn: ":"))
-}
-
 extension String {
     var pathExtension: String {
         (self as NSString).pathExtension
