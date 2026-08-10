@@ -48,38 +48,21 @@ public final class FileObject: Hashable, Sendable {
         self.init(url: url, allValues: allValues)
     }
 
-    public convenience init(url: URL, name: String, path: String? = nil, isDirectory: Bool = false, group: String? = nil, thumbnail: URL? = nil) {
-        var allValues = [URLResourceKey: Sendable]()
-        allValues[.nameKey] = name
-        allValues[.pathKey] = path ?? url.lastPathComponent
-        allValues[.fileResourceTypeKey] = isDirectory ? URLFileResourceType.directory : .regular
-        allValues[.groupKey] = group
-        allValues[.thumbnailKey] = thumbnail
-        self.init(url: url, allValues: allValues)
-    }
-
-    public convenience init(url: URL, name: String, path: String, isDirectory: Bool, childrensCount: Int? = nil) {
+    public convenience init(url: URL, name: String, path: String, childrensCount: Int) {
         var allValues = [URLResourceKey: Sendable]()
         allValues[.nameKey] = name
         allValues[.pathKey] = path
         allValues[.childrensCount] = childrensCount
+        allValues[.fileResourceTypeKey] = URLFileResourceType.directory
+        self.init(url: url, allValues: allValues)
+    }
+
+    public convenience init(url: URL, name: String, isDirectory: Bool, extinf: [String: String]? = nil) {
+        var allValues = [URLResourceKey: Sendable]()
+        allValues[.nameKey] = name
+        allValues[.pathKey] = url.relativePath
         allValues[.fileResourceTypeKey] = isDirectory ? URLFileResourceType.directory : .regular
-        self.init(url: url, allValues: allValues)
-    }
-
-    public convenience init(url: URL, name: String, extinf: [String: String]) {
-        var allValues = [URLResourceKey: Sendable]()
-        allValues[.nameKey] = name
-        allValues[.pathKey] = url.relativePath
         self.init(url: url, allValues: allValues, extinf: extinf)
-    }
-
-    public convenience init(url: URL, name: String, type: URLFileResourceType) {
-        var allValues = [URLResourceKey: Sendable]()
-        allValues[.nameKey] = name
-        allValues[.pathKey] = url.relativePath
-        allValues[.fileResourceTypeKey] = type
-        self.init(url: url, allValues: allValues)
     }
 
     /// URL to access the resource, can be a relative URL against base URL.
