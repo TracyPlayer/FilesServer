@@ -147,24 +147,16 @@ public extension FilesServer {
         }
     }
 
-    static func play(url: URL) -> Either<URL, AbstractAVIOContext> {
-        let semaphore = DispatchSemaphore(value: 0) // 初始信号量值为 0
-        nonisolated(unsafe) var drive: FilesServer?
-        Task {
-            do {
-                drive = try await getServer(url: url)
-                semaphore.signal()
-            } catch {
-                KSLog(error)
-                semaphore.signal()
+    static func play(url: URL) async -> Either<URL, AbstractAVIOContext> {
+        do {
+            if let drive = try await getServer(url: url) {
+                var newPath = url.path
+                newPath.removeFirst(drive.url.path.count)
+                return drive.play(for: url, path: newPath)
             }
+        } catch {
+            KSLog(error)
         }
-        semaphore.wait()
-        guard let drive else {
-            return .left(url)
-        }
-        var newPath = url.path
-        newPath.removeFirst(drive.url.path.count)
-        return drive.play(for: url, path: newPath)
+        return .left(url)
     }
 }
