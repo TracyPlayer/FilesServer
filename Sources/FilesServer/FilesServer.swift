@@ -20,11 +20,6 @@ public protocol FilesServer: Sendable {
     func play(for url: URL) async throws -> Either<URL, AbstractAVIOContext>
 }
 
-@globalActor
-actor BackgroundActor {
-    static let shared = BackgroundActor()
-}
-
 public enum HTTPMethod: String {
     case get = "GET"
     case post = "POST"
@@ -93,40 +88,19 @@ public extension FilesServer {
         URL.url(scheme: scheme(isHttps: isHttps), host: host, port: port, path: path, username: username, password: password)
     }
 
-    static func getServer(url: URL, name: String? = nil) -> FilesServer? {
+    static func getServer(url: URL) -> FilesServer? {
         if let drive = drives.first(where: { url.absoluteString.hasPrefix($0.url.absoluteString) }) {
             return drive
         } else {
-            if let name {
-                if let drive = startDiscovery(url: url) {
-                    drives.append(drive)
-                    return drive
-                } else {
-                    return nil
-                }
-            } else {
-                let path = url.path
-                var components = URLComponents()
-                components.scheme = url.scheme
-                components.host = url.host
-                components.port = url.port
-                components.user = url.user
-                components.password = url.password
-                guard let url = components.url, let drive = startDiscovery(url: url) else {
-                    return nil
-                }
-                // 解决多线程并发crash的问题
-                if let value = drives.first(where: { $0.url == url }) {
-                    return value
-                }
+            if let drive = startDiscovery(url: url) {
                 drives.append(drive)
                 return drive
+            } else {
+                return nil
             }
         }
     }
 
-    /// 增加actor，防止并发导致crash
-    @BackgroundActor
     static func play(url: URL) async -> Either<URL, AbstractAVIOContext> {
         do {
             if let drive = getServer(url: url) {
