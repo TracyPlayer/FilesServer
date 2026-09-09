@@ -92,7 +92,13 @@ public extension FilesServer {
         if let drive = drives.first(where: { url.absoluteString.hasPrefix($0.url.absoluteString) }) {
             return drive
         } else {
-            if let drive = startDiscovery(url: url) {
+            var components = URLComponents()
+            components.scheme = url.scheme
+            components.host = url.host
+            components.port = url.port
+            components.user = url.user
+            components.password = url.password
+            if let url = components.url, let drive = startDiscovery(url: url) {
                 drives.append(drive)
                 return drive
             } else {
