@@ -92,13 +92,7 @@ public extension FilesServer {
         if let drive = drives.first(where: { url.absoluteString.hasPrefix($0.url.absoluteString) }) {
             return drive
         } else {
-            var components = URLComponents()
-            components.scheme = url.scheme
-            components.host = url.host
-            components.port = url.port
-            components.user = url.user
-            components.password = url.password
-            if let url = components.url, let drive = startDiscovery(url: url) {
+            if let drive = startDiscovery(url: url) {
                 drives.append(drive)
                 return drive
             } else {
@@ -109,7 +103,13 @@ public extension FilesServer {
 
     static func play(url: URL) async -> Either<URL, AbstractAVIOContext> {
         do {
-            if let drive = getServer(url: url) {
+            var components = URLComponents()
+            components.scheme = url.scheme
+            components.host = url.host
+            components.port = url.port
+            components.user = url.user
+            components.password = url.password
+            if let baseURL = components.url, let drive = startDiscovery(url: baseURL) {
                 return try await drive.play(for: url)
             }
         } catch {

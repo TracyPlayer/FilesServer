@@ -1,5 +1,5 @@
 //
-//  FileObject.swift
+//  FileObject+.swift
 //  FileProvider
 //
 //  Created by kintan
