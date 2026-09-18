@@ -75,6 +75,10 @@ public extension URL {
 }
 
 public extension FilesServer {
+    static func scheme(isHttps: Bool) -> String {
+        isHttps ? "https" : "http"
+    }
+
     func play(for url: URL) async throws -> Either<URL, AbstractAVIOContext> {
         .left(url)
     }
